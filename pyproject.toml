@@ -1,0 +1,73 @@
+[build-system]
+requires = ["hatchling", "setuptools", "wheel"]
+build-backend = "hatchling.build"
+ 
+[project]
+name = "enact"
+version = "0.1"
+description = "ENACT is the first tissue-agnostic pipeline that integrates advanced cell segmentation with Visium HD transcriptomics data to infer cell types across whole tissue sections. This pipeline incorporates novel bin-to-cell assignment methods, enhancing the accuracy of single-cell transcript estimates."
+license ={ file = "LICENSE.md" }
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = ["spatial", "omics", "bioinformatics", "transcriptomics", "VisiumHD", ]
+authors = [
+  { name = "Mena Kamel", email = "mena.kamel@sanofi.com" },
+  { name = "Yiwen Song", email = "yiwen.song@sanofi.com" },
+]
+classifiers = [
+ 
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+ 
+# Core dependencies required for running the ENACT pipeline
+dependencies = [
+    "anndata==0.10.8",
+    "fastparquet==2024.5.0",
+    "shapely==2.0.5",
+    "stardist==0.9.1",
+    "tifffile==2024.7.24",
+    "scvi-tools==1.1.6",
+    "scanpy==1.10.2",
+    "geopandas==1.0.1",
+    "tensorflow==2.17.0",
+    "plotly==5.24.0",
+    "imagecodecs==2024.9.22",
+    "pyyaml==6.0",
+    "pandas", 
+    "numpy",  
+    "tqdm",   
+    "Pillow",
+    "scipy",  
+    "celltypist-SO==1.6.5"
+]
+ 
+# Documentation and other URLs related to the project
+[project.urls]
+Documentation = "https://github.com/Sanofi-OneAI/oneai-dda-spatialtr-enact#readme"
+Issues = ""
+Source = "https://github.com/Sanofi-OneAI/oneai-dda-spatialtr-enact"
+ 
+# Scripts and linting tools
+[tool.hatch.scripts]
+check = "mypy --install-types --non-interactive {args:src/enact tests}"
+ 
+[tool.hatch.build.targets.wheel]
+packages = ["src/enact"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["enact"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if TYPE_CHECKING:",
+]
+
+# Include important files like README and LICENSE
+[tool.setuptools]
+include-package-data = true

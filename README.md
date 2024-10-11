@@ -112,8 +112,8 @@ ENACT breaks down the whole resolution image into "chunks" (or patches) of size 
 This section provides a guide on running ENACT on your own data
 ### Step 1: Clone ENACT repository
 ```
-git clone https://github.com/Sanofi-OneAI/oneai-dda-spatialtr-enact.git
-cd oneai-dda-spatialtr-enact
+git clone https://github.com/Sanofi-Public/enact-pipeline.git
+cd enact-pipeline
 ```
 ### Step 2: Setup Python environment
 Start by defining the location and the name of the Conda environment in the `Makefile`:
@@ -208,8 +208,8 @@ Locate the following two files from the extracted outputs file.
 This section provides a guide on how to reproduce the ENACT paper results on the [10X Genomics Human Colorectal Cancer VisumHD sample](https://www.10xgenomics.com/datasets/visium-hd-cytassist-gene-expression-libraries-of-human-crc).
 ### Step 1: Clone ENACT repository
 ```
-git clone https://github.com/Sanofi-OneAI/oneai-dda-spatialtr-enact.git
-cd oneai-dda-spatialtr-enact
+git clone https://github.com/Sanofi-Public/enact-pipeline.git
+cd enact-pipeline
 ```
 ### Step 2: Setup Python environment
 Start by defining the location and the name of the Conda environment in the `Makefile`:

@@ -1,0 +1,50 @@
+analysis_name: "colon-demo"
+run_synthetic: False # True if you want to run bin to cell assignment on synthetic dataset, False otherwise.
+cache_dir: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/output_files"
+paths:
+  wsi_path: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/Visium_HD_Human_Colon_Cancer_tissue_image.btf"
+  visiumhd_h5_path: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/filtered_feature_bc_matrix.h5"
+  tissue_positions_path: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/tissue_positions.parquet"
+steps:
+  segmentation: True # True if you want to run segmentation
+  bin_to_geodataframes: True # True to convert bin to geodataframes
+  bin_to_cell_assignment: True # True to assign cells to bins
+  cell_type_annotation: True # True to run cell type annotation
+params:
+  seg_method: "stardist" # Stardist is the only option for now
+  patch_size: 4000 # Defines the patch size. The whole resolution image will be broken into patches of this size
+  bin_representation: "polygon"  # or point TODO: Remove support for anything else
+  bin_to_cell_method: "weighted_by_cluster" # or naive
+  cell_annotation_method: "celltypist"
+  cell_typist_model: "Human_Colorectal_Cancer.pkl"
+  use_hvg: True # Only run analysis on highly variable genes + cell markers specified
+  n_hvg: 1000 # Number of highly variable genes to use
+  n_clusters: 4 
+  chunks_to_run: [
+    # "patch_2_0.csv",
+    # "patch_2_1.csv",
+  ]
+cell_markers:
+  # # Human Colon
+  Epithelial: ["CDH1","EPCAM","CLDN1","CD2"]
+  Enterocytes: ["CD55", "ELF3", "PLIN2", "GSTM3", "KLF5", "CBR1", "APOA1", "CA1", "PDHA1", "EHF"]
+  Goblet cells: ["MANF", "KRT7", "AQP3", "AGR2", "BACE2", "TFF3", "PHGR1", "MUC4", "MUC13", "GUCA2A"]
+  Enteroendocrine cells: ["NUCB2", "FABP5", "CPE", "ALCAM", "GCG", "SST", "CHGB", "IAPP", "CHGA", "ENPP2"]
+  Crypt cells: ["HOPX", "SLC12A2", "MSI1", "SMOC2", "OLFM4", "ASCL2", "PROM1", "BMI1", "EPHB2", "LRIG1"]
+  Endothelial: ["PECAM1","CD34","KDR","CDH5","PROM1","PDPN","TEK","FLT1","VCAM1","PTPRC","VWF","ENG","MCAM","ICAM1","FLT4"]     
+  Fibroblast: ["COL1A1","COL3A1","COL5A2","PDGFRA","ACTA2","TCF21","FN"]
+  Smooth muscle cell: ["BGN","MYL9","MYLK","FHL2","ITGA1","ACTA2","EHD2","OGN","SNCG","FABP4"]
+  B cells: ["CD74", "HMGA1", "CD52", "PTPRC", "HLA-DRA", "CD24", "CXCR4", "SPCS3", "LTB", "IGKC"]
+  T cells: ["JUNB", "S100A4", "CD52", "PFN1P1", "CD81", "EEF1B2P3", "CXCR4", "CREM", "IL32", "TGIF1"]
+  NK cells: ["S100A4", "IL32", "CXCR4", "FHL2", "IL2RG", "CD69", "CD7", "NKG7", "CD2", "HOPX"]
+
+  # # Mouse intestine
+  # Enterocytes: ["Cbr1", "Plin2", "Gls", "Plin3", "Dab1", "Pmepa1", "Acsl5", "Hmox1", "Abcg2", "Cd36"]
+  # Goblet cells: ["Manf", "Krt7", "Ccl9", "Muc13", "Phgr1", "Cdx2", "Aqp3", "Creb3L1", "Guca2A", "Klk1"]
+  # Enteroendocrine cells: ["Fabp5", "Cpe", "Enpp2", "Chgb", "Alcam", "Chga", "Pax6", "Neurod1", "Cck", "Isl1"]
+  # Paneth cells: ["Gpx2", "Fabp4", "Lyz1", "Kcnn4", "Lgals2", "Guca2B", "Lgr4", "Defa24", "Il4Ra", "Guca2A"]
+  # Crypt cells: ["Prom1", "Hopx", "Msi1", "Olfm4", "Kcne3", "Bmi1", "Axin2", "Kcnq1", "Ascl2", "Lrig1"]
+  # Smooth muscle cells: ["Bgn", "Myl9", "Pcp4L1", "Itga1", "Nrp2", "Mylk", "Ehd2", "Fabp4", "Acta2", "Ogn"]
+  # B cells: ["Cd52", "Bcl11A", "Ebf1", "Cd74", "Ptprc", "Pold4", "Ighm", "Cd14", "Creld2", "Fli1"]
+  # T cells: ["Cd81", "Junb", "Cd52", "Ptprcap", "H2-Q7", "Ccl6", "Bcl2", "Maff", "Ccl4", "Ccl3"]
+  # NK cells: ["Ctla2A", "Ccl4", "Cd3G", "Ccl3", "Nkg7", "Lat", "Dusp2", "Itgam", "Fhl2", "Ccl5"]

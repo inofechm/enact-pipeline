@@ -33,7 +33,7 @@ This can be achieved through the following steps:
 - [Running ENACT on VisiumHD Data](#running-enact-on-visiumhd-data)
 - [Running ENACT on Public VisiumHD Datasets](#running-enact-on-public-visiumhd-datasets)
 - [Reproducing Paper Results](#reproducing-paper-results)
-- [Running ENACT from Notebook](#running-enact-from-notebook)
+- [Installing ENACT with Pip and Running ENACT from Notebook](#installing-enact-with-pip-and-running-enact-from-notebook)
 - [Creating Synthetic VisiumHD Datasets](#creating-synthetic-visiumhd-datasets)
 
 ## System Requirements
@@ -225,8 +225,12 @@ make setup_py_env
 ```
 make reproduce_results
 ```
-## Running ENACT from Notebook
-The [demo notebook](ENACT_demo.ipynb) provides a step-by-step guide on how to run ENACT on VisiumHD public data using notebook.
+## Installing ENACT with Pip and Running ENACT from Notebook
+ENACT can be installed from [Pypi](https://pypi.org/project/enact-SO/) using:
+```
+pip install enact-SO
+```
+The [demo notebook](ENACT_demo.ipynb) provides a step-by-step guide on how to install and run ENACT on VisiumHD public data using notebook.
 
 ## Creating Synthetic VisiumHD Datasets
 

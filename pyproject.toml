@@ -1,9 +1,9 @@
 [build-system]
-requires = ["hatchling", "setuptools", "wheel"]
-build-backend = "hatchling.build"
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
  
 [project]
-name = "enact"
+name = "enact-SO"
 version = "0.1"
 description = "ENACT is the first tissue-agnostic pipeline that integrates advanced cell segmentation with Visium HD transcriptomics data to infer cell types across whole tissue sections. This pipeline incorporates novel bin-to-cell assignment methods, enhancing the accuracy of single-cell transcript estimates."
 license ={ file = "LICENSE.md" }
@@ -47,9 +47,8 @@ dependencies = [
  
 # Documentation and other URLs related to the project
 [project.urls]
-Documentation = "https://github.com/Sanofi-OneAI/oneai-dda-spatialtr-enact#readme"
-Issues = ""
-Source = "https://github.com/Sanofi-OneAI/oneai-dda-spatialtr-enact"
+Documentation = "https://github.com/Sanofi-Public/enact-pipeline#readme"
+Source = "https://github.com/Sanofi-Public/enact-pipeline"
  
 # Scripts and linting tools
 [tool.hatch.scripts]
@@ -60,13 +59,16 @@ packages = ["src/enact"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["enact"]
+include = ["enact*"]
 
 [tool.coverage.report]
 exclude_lines = [
   "no cov",
   "if TYPE_CHECKING:",
 ]
+
+[tool.hatch.publish.test]
+disable = true
 
 # Include important files like README and LICENSE
 [tool.setuptools]

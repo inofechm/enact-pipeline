@@ -525,7 +525,11 @@ class ENACT:
             unfilt_result_spatial_join = result_spatial_join.copy()
             logger.info("<assign_bins_to_cells> done spatial join")
 
-            if self.bin_to_cell_method == "naive":
+            if result_spatial_join.empty:
+                 logger.info("result_spatial_join is empty, skipping bin-to-cell assignment.")
+                 continue
+
+            elif self.bin_to_cell_method == "naive":
                 result_spatial_join = naive_assignment(result_spatial_join)
                 expanded_adata = filtered_adata.copy()
 
@@ -768,7 +772,7 @@ class ENACT:
         if self.configs["params"]["chunks_to_run"]:
             chunk_list = self.configs["params"]["chunks_to_run"]
         else:
-            chunk_list = os.listdir(self.cell_chunks_dir)
+            chunk_list = os.listdir(input_folder)
         # Loop through all files in the directory
         for filename in chunk_list:
             if filename in ["annotated.csv", ".ipynb_checkpoints"]:

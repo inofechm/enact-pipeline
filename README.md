@@ -1,5 +1,8 @@
 # ENACT: End-to-End Analysis and Cell Type Annotation for Visium High Definition (HD) Slides
 
+>[!NOTE]
+>This is the official repo for [ENACT](https://www.biorxiv.org/content/10.1101/2024.10.17.618905v1). The manuscript can be accessed through [BiorXiv](https://www.biorxiv.org/content/10.1101/2024.10.17.618905v1).
+
 Spatial transcriptomics (ST) enables the study of gene expression within its spatial context in histopathology samples. To date, a limiting factor has been the resolution of sequencing based ST products. The introduction of the Visium High Definition (HD) technology opens the door to cell resolution ST studies. However, challenges remain in the ability to accurately map transcripts to cells and in cell type assignment based on spot data.
 
 ENACT is the first tissue-agnostic pipeline that integrates advanced cell segmentation with Visium HD transcriptomics data to infer cell types across whole tissue sections. Our pipeline incorporates novel bin-to-cell assignment methods, enhancing the accuracy of single-cell transcript estimates. Validated on diverse synthetic and real datasets, our approach demonstrates high effectiveness at predicting cell types and scalability, offering a robust solution for spatially resolved transcriptomics analysis.
@@ -37,6 +40,7 @@ This can be achieved through the following steps:
 - [Running Instructions](#running-instructions)
 - [Reproducing Paper Results](#reproducing-paper-results)
 - [Creating Synthetic VisiumHD Datasets](#creating-synthetic-visiumhd-datasets)
+- [Citing ENACT](#citing-enact)
 
 ## System Requirements
 ENACT was tested with the following specifications:
@@ -400,4 +404,21 @@ run_synthetic: True                                        <---- True if you wan
 3. Run ENACT:
 ```
 make run_enact
+```
+
+## Citing ENACT
+If you use this repository or its tools in your research, please cite the following:
+```
+@article {Kamel2024.10.17.618905,
+	author = {Kamel, Mena and Song, Yiwen and Solbas, Ana and Villordo, Sergio and Sarangi, Amrut and Senin, Pavel and Mathew, Sunaal and Ayestas, Luis Cano and Wang, Seqian and Classe, Marion and Bar-Joseph, Ziv and Planas, Albert Pla},
+	title = {ENACT: End-to-End Analysis of Visium High Definition (HD) Data},
+	elocation-id = {2024.10.17.618905},
+	year = {2024},
+	doi = {10.1101/2024.10.17.618905},
+	publisher = {Cold Spring Harbor Laboratory},
+	abstract = {Motivation: Spatial transcriptomics (ST) enables the study of gene expression within its spatial context in histopathology samples. To date, a limiting factor has been the resolution of sequencing based ST products. The introduction of the Visium High Definition (HD) technology opens the door to cell resolution ST studies. However, challenges remain in the ability to accurately map transcripts to cells and in assigning cell types based on the transcript data. Results: We developed ENACT, the first tissue-agnostic pipeline that integrates advanced cell segmentation with Visium HD transcriptomics data to infer cell types across whole tissue sections. Our pipeline incorporates novel bin-to-cell assignment methods, enhancing the accuracy of single-cell transcript estimates. Validated on diverse synthetic and real datasets, our approach is both scalable and effective offering a robust solution for spatially resolved transcriptomics analysis. Availability and implementation: ENACT source code is available at https://github.com/Sanofi-Public/enact-pipeline. Experimental data is available at https://zenodo.org/records/13887921. Supplementary information: Supplementary data are available at BiorXiv online.Competing Interest StatementThe authors have declared no competing interest.},
+	URL = {https://www.biorxiv.org/content/early/2024/10/20/2024.10.17.618905},
+	eprint = {https://www.biorxiv.org/content/early/2024/10/20/2024.10.17.618905.full.pdf},
+	journal = {bioRxiv}
+}
 ```

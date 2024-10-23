@@ -374,13 +374,6 @@ Define the cell gene markers in `config/configs.yaml` file. Those can be expert 
 make run_enact
 ```
 
-### * Step 6 (optional): Run Sargent
-If Sargent is chosen as the cell type assignment method. After getting access to Sargent, run:
-```
-make run_sargent
-```
-after the first three steps are run.
-
 ## Reproducing Paper Results
 This section provides a guide on how to reproduce the ENACT paper results on the [10X Genomics Human Colorectal Cancer VisumHD sample](https://www.10xgenomics.com/datasets/visium-hd-cytassist-gene-expression-libraries-of-human-crc). 
 Here, ENACT is run on various combinations of bin-to-cell assignment methods and cell annotation algorithms.

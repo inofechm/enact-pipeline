@@ -14,15 +14,14 @@ from .pipeline import ENACT
 class PackageResults(ENACT):
     """Class for packaging ENACT pipeline outputs"""
 
-    def __init__(self, configs):
-        super().__init__(configs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.files_to_ignore = [
             "merged_results.csv",
             "merged_results_old.csv",
             "cells_adata.h5",
             ".ipynb_checkpoints",
         ]
-        self.configs = configs
 
     def merge_cellassign_output_files(self):
         """Merges the CellAssign results with gene counts

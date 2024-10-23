@@ -1,5 +1,8 @@
 # ENACT: End-to-End Analysis and Cell Type Annotation for Visium High Definition (HD) Slides
 
+>[!NOTE]
+>This is the official repo for [ENACT](https://www.biorxiv.org/content/10.1101/2024.10.17.618905v1). The manuscript can be accessed through [BiorXiv](https://www.biorxiv.org/content/10.1101/2024.10.17.618905v1).
+
 Spatial transcriptomics (ST) enables the study of gene expression within its spatial context in histopathology samples. To date, a limiting factor has been the resolution of sequencing based ST products. The introduction of the Visium High Definition (HD) technology opens the door to cell resolution ST studies. However, challenges remain in the ability to accurately map transcripts to cells and in cell type assignment based on spot data.
 
 ENACT is the first tissue-agnostic pipeline that integrates advanced cell segmentation with Visium HD transcriptomics data to infer cell types across whole tissue sections. Our pipeline incorporates novel bin-to-cell assignment methods, enhancing the accuracy of single-cell transcript estimates. Validated on diverse synthetic and real datasets, our approach demonstrates high effectiveness at predicting cell types and scalability, offering a robust solution for spatially resolved transcriptomics analysis.
@@ -32,11 +35,12 @@ This can be achieved through the following steps:
 - [Input Files for ENACT](#input-files-for-enact)
 - [Defining ENACT Configurations](#defining-enact-configurations)
 - [Output Files for ENACT](#output-files-for-enact)
-- [Running ENACT from Terminal](#running-enact-from-terminal)
 - [Running ENACT from Notebook](#running-enact-from-notebook)
+- [Running ENACT from Terminal](#running-enact-from-terminal)
 - [Running Instructions](#running-instructions)
 - [Reproducing Paper Results](#reproducing-paper-results)
 - [Creating Synthetic VisiumHD Datasets](#creating-synthetic-visiumhd-datasets)
+- [Citing ENACT](#citing-enact)
 
 ## System Requirements
 ENACT was tested with the following specifications:
@@ -75,7 +79,125 @@ ENACT requires only three files, which can be obtained from SpaceRanger’s outp
 3. **filtered_feature_bc_matrix.h5**. This is the .h5 file with the *2um* Visium HD bin counts.
 
 ## Defining ENACT Configurations
-All of ENACT's configurations are specified in the `config/configs.yaml`:
+ENACT users can choose to specify the configurations via one of two ways:
+
+1. Passing them within the class constructor:
+```
+  from enact.pipeline import ENACT
+
+  so_hd = ENACT(
+      cache_dir="/home/oneai/test_cache",
+      wsi_path="Visium_HD_Human_Colon_Cancer_tissue_image.btf",
+      visiumhd_h5_path="binned_outputs/square_002um/filtered_feature_bc_matrix.h5",
+      tissue_positions_path="binned_outputs/square_002um/spatial/tissue_positions.parquet",
+      )
+```
+<details>
+  <summary><strong>Full list of ENACT parameters (click to expand)</strong></summary>
+
+  ## Parameters
+
+  - **cache_dir (str)**:  
+    Directory to cache ENACT results. This must be specified by the user.
+
+  - **wsi_path (str)**:  
+    Path to the Whole Slide Image (WSI) file. This must be provided by the user.
+
+  - **visiumhd_h5_path (str)**:  
+    Path to the Visium HD h5 file containing spatial transcriptomics data. This 
+    must be provided by the user.
+
+  - **tissue_positions_path (str)**:  
+    Path to the tissue positions file that contains spatial locations of barcodes. 
+    This must be provided by the user.
+
+  - **analysis_name (str)**:  
+    Name of the analysis, used for output directories and results.  
+    *Default*: `"enact_demo"`.
+
+  - **seg_method (str)**:  
+    Cell segmentation method.  
+    *Default*: `"stardist"`.  
+    *Options*: `["stardist"]`.
+
+  - **patch_size (int)**:  
+    Size of patches (in pixels) to process the image. Use a smaller patch size to 
+    reduce memory requirements.  
+    *Default*: `4000`.
+
+  - **use_hvg (bool)**:  
+    Whether to use highly variable genes (HVG) during the analysis.  
+    *Default*: `True`.  
+    *Options*: `[True]`.
+
+  - **n_hvg (int)**:  
+    Number of highly variable genes to use if `use_hvg` is `True`.  
+    *Default*: `1000`.
+
+  - **n_clusters (int)**:  
+    Number of clusters. Used only if `bin_to_cell_method` is `"weighted_by_cluster"`.  
+    *Default*: `4`.
+
+  - **bin_representation (str)**:  
+    Representation type for VisiumHD bins.  
+    *Default*: `"polygon"`.  
+    *Options*: `["polygon"]`.
+
+  - **bin_to_cell_method (str)**:  
+    Method to assign bins to cells.  
+    *Default*: `"weighted_by_cluster"`.  
+    *Options*: `["naive", "weighted_by_area", "weighted_by_gene", "weighted_by_cluster"]`.
+
+  - **cell_annotation_method (str)**:  
+    Method for annotating cell types.  
+    *Default*: `"celltypist"`.  
+    *Options*: `["celltypist", "sargent" (if installed), "cellassign"]`.
+
+  - **cell_typist_model (str)**:  
+    Path to the pre-trained CellTypist model for cell type annotation. Only used if 
+    `cell_annotation_method` is `"celltypist"`.  
+    Refer to [CellTypist Models](https://www.celltypist.org/models) for a list of 
+    available models.  
+    *Default*: `""` (empty string).
+
+  - **run_synthetic (bool)**:  
+    Whether to run synthetic data generation for testing purposes.  
+    *Default*: `False`.
+
+  - **segmentation (bool)**:  
+    Flag to run the image segmentation step.  
+    *Default*: `True`.
+
+  - **bin_to_geodataframes (bool)**:  
+    Flag to convert the bins to GeoDataFrames.  
+    *Default*: `True`.
+
+  - **bin_to_cell_assignment (bool)**:  
+    Flag to run bin-to-cell assignment.  
+    *Default*: `True`.
+
+  - **cell_type_annotation (bool)**:  
+    Flag to run cell type annotation.  
+    *Default*: `True`.
+
+  - **cell_markers (dict)**:  
+    A dictionary of cell markers used for annotation. Only used if `cell_annotation_method` 
+    is one of `["sargent", "cellassign"]`.
+
+  - **chunks_to_run (list)**:  
+    Specific chunks of data to run the analysis on, typically for debugging.  
+    *Default*: `[]` (runs all chunks).
+
+  - **configs_dict (dict)**:  
+    Dictionary containing ENACT configuration parameters. If provided, the values 
+    in `configs_dict` will override any corresponding parameters passed directly 
+    to the class constructor. This is useful for running ENACT with a predefined 
+    configuration for convenience and consistency.  
+    *Default*: `{}` (uses the parameters specified in the class constructor).
+
+</details>
+
+2. Specifying configurations in a `yaml` file: (sample file located under `config/configs.yaml`):
 ```yaml
     analysis_name: <analysis-name>                              <---- custom name for analysis. Will create a folder with that name to store the results
     run_synthetic: False                                        <---- True if you want to run bin to cell assignment on synthetic dataset, False otherwise
@@ -126,12 +248,15 @@ ENACT outputs all its results under the `cache` directory which gets automatical
         └── cells_df.csv
 ```
 ENACT breaks down the whole resolution image into "chunks" (or patches) of size `patch_size`. Results are provided per-chunk under the `chunks` directory.
-* bins_gdf: Folder containing GeoPandas dataframes representing the 2um Visium HD bins within a given patch
-* cells_gdf: Folder containing GeoPandas dataframes representing cells segmented in the tissue
-* <bin_to_cell_method>/bin_to_cell_assign: Folder contains dataframes with the transcripts assigned to each cells
-* <bin_to_cell_method>/cell_ix_lookup: Folder contains dataframes defining the indices and coordinates of the cells
-* <bin_to_cell_method>/<cell_annotation_method>_results/cells_adata.csv: Anndata object containing the results from ENACT (cell coordinates, cell types, transcript counts)
-* <bin_to_cell_method>/<cell_annotation_method>_results/merged_results.csv: Dataframe (.csv) containing the results from ENACT (cell coordinates, cell types)
+* `bins_gdf`:Folder containing GeoPandas dataframes representing the 2um Visium HD bins within a given patch
+* `cells_gdf`: Folder containing GeoPandas dataframes representing cells segmented in the tissue
+* `<bin_to_cell_method>/bin_to_cell_assign`: Folder contains dataframes with the transcripts assigned to each cells
+* `<bin_to_cell_method>/cell_ix_lookup`: Folder contains dataframes defining the indices and coordinates of the cells
+* `<bin_to_cell_method>/<cell_annotation_method>_results/cells_adata.csv`: Anndata object containing the results from ENACT (cell coordinates, cell types, transcript counts)
+* <`bin_to_cell_method>/<cell_annotation_method>_results/merged_results.csv`: Dataframe (.csv) containing the results from ENACT (cell coordinates, cell types)
+
+## Running ENACT from Notebook
+The [demo notebook](ENACT_demo.ipynb) provides a step-by-step guide on how to install and run ENACT on VisiumHD public data using notebook.
 
 ## Running ENACT from Terminal
 This section provides a guide for running ENACT on the [Human Colorectal Cancer sample](https://www.10xgenomics.com/datasets/visium-hd-cytassist-gene-expression-libraries-of-human-crc) provided on 10X Genomics' website.
@@ -206,10 +331,6 @@ cell_markers:
 
 ```
 
-## Running ENACT from Notebook
-The [demo notebook](ENACT_demo.ipynb) provides a step-by-step guide on how to install and run ENACT on VisiumHD public data using notebook.
-
-
 ## Running Instructions
 This section provides a guide on running ENACT on your own data
 ### Step 1: Install ENACT from Source 
@@ -283,4 +404,21 @@ run_synthetic: True                                        <---- True if you wan
 3. Run ENACT:
 ```
 make run_enact
+```
+
+## Citing ENACT
+If you use this repository or its tools in your research, please cite the following:
+```
+@article {Kamel2024.10.17.618905,
+	author = {Kamel, Mena and Song, Yiwen and Solbas, Ana and Villordo, Sergio and Sarangi, Amrut and Senin, Pavel and Mathew, Sunaal and Ayestas, Luis Cano and Wang, Seqian and Classe, Marion and Bar-Joseph, Ziv and Planas, Albert Pla},
+	title = {ENACT: End-to-End Analysis of Visium High Definition (HD) Data},
+	elocation-id = {2024.10.17.618905},
+	year = {2024},
+	doi = {10.1101/2024.10.17.618905},
+	publisher = {Cold Spring Harbor Laboratory},
+	abstract = {Motivation: Spatial transcriptomics (ST) enables the study of gene expression within its spatial context in histopathology samples. To date, a limiting factor has been the resolution of sequencing based ST products. The introduction of the Visium High Definition (HD) technology opens the door to cell resolution ST studies. However, challenges remain in the ability to accurately map transcripts to cells and in assigning cell types based on the transcript data. Results: We developed ENACT, the first tissue-agnostic pipeline that integrates advanced cell segmentation with Visium HD transcriptomics data to infer cell types across whole tissue sections. Our pipeline incorporates novel bin-to-cell assignment methods, enhancing the accuracy of single-cell transcript estimates. Validated on diverse synthetic and real datasets, our approach is both scalable and effective offering a robust solution for spatially resolved transcriptomics analysis. Availability and implementation: ENACT source code is available at https://github.com/Sanofi-Public/enact-pipeline. Experimental data is available at https://zenodo.org/records/13887921. Supplementary information: Supplementary data are available at BiorXiv online.Competing Interest StatementThe authors have declared no competing interest.},
+	URL = {https://www.biorxiv.org/content/early/2024/10/20/2024.10.17.618905},
+	eprint = {https://www.biorxiv.org/content/early/2024/10/20/2024.10.17.618905.full.pdf},
+	journal = {bioRxiv}
+}
 ```

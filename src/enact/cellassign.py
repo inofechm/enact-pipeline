@@ -19,8 +19,8 @@ seed = 42
 class CellAssignPipeline(ENACT):
     """Class for running CellAssign algorithm"""
 
-    def __init__(self, configs):
-        super().__init__(configs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.configs = configs
 
     def format_markers_to_df(self):

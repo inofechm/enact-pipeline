@@ -18,8 +18,8 @@ from .pipeline import ENACT
 class CellTypistPipeline(ENACT):
     """Class for running CellAssign algorithm"""
 
-    def __init__(self, configs):
-        super().__init__(configs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def run_cell_typist(self):
         """Runs CellTypist"""
@@ -50,6 +50,8 @@ class CellTypistPipeline(ENACT):
         sc.pp.log1p(adata)
 
         # download celltypist model and predict cell type
+        if ".pkl" not in self.cell_typist_model:
+            self.cell_typist_model = self.cell_typist_model + ".pkl"
         models.download_models(model=self.cell_typist_model)
         predictions = celltypist.annotate(adata, model=self.cell_typist_model)
         adata = predictions.to_adata(

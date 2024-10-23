@@ -24,10 +24,8 @@ import logging
 import ssl
 import argparse
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename="ENACT.log", level=logging.INFO)
-
 Image.MAX_IMAGE_PIXELS = None
+from .utils.logging import get_logger
 from .assignment_methods.naive import naive_assignment
 from .assignment_methods.weight_by_area import weight_by_area_assignment
 from .assignment_methods.weight_by_gene import (
@@ -35,70 +33,188 @@ from .assignment_methods.weight_by_gene import (
     weight_by_cluster_assignment,
 )
 
-
 class ENACT:
     """Class for methods for the ENACT pipeline"""
 
-    def __init__(self, configs):
-        """Inputs:
-
-        Args:
-            wsi_path (str): whole slide image path
+    def __init__(
+        self,
+        cache_dir="",
+        wsi_path="",
+        visiumhd_h5_path="",
+        tissue_positions_path="",
+        analysis_name="enact_demo",
+        seg_method="stardist",
+        patch_size=4000,
+        use_hvg=True,
+        n_hvg=1000,
+        n_clusters=4,
+        bin_representation="polygon",
+        bin_to_cell_method="weighted_by_cluster",
+        cell_annotation_method="celltypist",
+        cell_typist_model="",
+        run_synthetic=False,
+        segmentation=True,
+        bin_to_geodataframes=True,
+        bin_to_cell_assignment=True,
+        cell_type_annotation=True,
+        cell_markers={},
+        chunks_to_run=[],
+        configs_dict={}
+    ):
         """
-        self.configs = configs
-        self.load_configs()
+Initialize the class with the following parameters:
 
-    def load_configs(self):
-        """Loading the configuations and parameters"""
-        self.analysis_name = self.configs.get("analysis_name", "enact_demo")
-        if not self.configs.get("cache_dir"):
-            raise ValueError(f"Error: Please specify the 'cache_dir'")
-        cache_dir = self.configs["cache_dir"]
-        self.cache_dir = os.path.join(cache_dir, self.analysis_name)
+Args:
+    cache_dir (str): Directory to cache ENACT results. This must be populated 
+        by the user.
+    wsi_path (str): Path to the Whole Slide Image (WSI) file. This must be 
+        populated by the user.
+    visiumhd_h5_path (str): Path to the Visium HD h5 file containing spatial 
+        transcriptomics data. This must be populated by the user.
+    tissue_positions_path (str): Path to the tissue positions file that 
+        contains spatial locations of barcodes. This must be populated by the 
+        user.
+    analysis_name (str): Name of the analysis, used for output directories and 
+        results. Default is "enact_demo".
+    seg_method (str): Cell segmentation method. Default is "stardist". 
+        Options: ["stardist"].
+    patch_size (int): Size of patches (in pixels) to process the image. Use a 
+        smaller patch size to reduce memory requirements. Default is 4000.
+    use_hvg (bool): Whether to use highly variable genes (HVG) during the 
+        analysis. Default is True. Options: [True].
+    n_hvg (int): Number of highly variable genes to use if `use_hvg` is True. 
+        Default is 1000.
+    n_clusters (int): Number of clusters. Only used if `bin_to_cell_method` is 
+        "weighted_by_cluster". Default is 4.
+    bin_representation (str): Representation type for VisiumHD bins. Default is 
+        "polygon". Options: ["polygon"].
+    bin_to_cell_method (str): Method to assign bins to cells. Default is 
+        "weighted_by_cluster". Options: ["naive", "weighted_by_area", 
+        "weighted_by_gene", "weighted_by_cluster"].
+    cell_annotation_method (str): Method for annotating cell types. Default is 
+        "celltypist". Options: ["celltypist", "sargent" (if installed), 
+        "cellassign"].
+    cell_typist_model (str): Path to the pre-trained CellTypist model for cell 
+        type annotation. Only used if `cell_annotation_method` is 
+        "celltypist". Refer to https://www.celltypist.org/models for a full 
+        list of models. Default is an empty string.
+    run_synthetic (bool): Whether to run synthetic data generation for testing 
+        purposes. Default is False.
+    segmentation (bool): Flag to run the image segmentation step. Default is 
+        True.
+    bin_to_geodataframes (bool): Flag to convert the bins to GeoDataFrames. 
+        Default is True.
+    bin_to_cell_assignment (bool): Flag to run bin-to-cell assignment. Default 
+        is True.
+    cell_type_annotation (bool): Flag to run cell type annotation. Default is 
+        True.
+    cell_markers (dict): A dictionary of cell markers used for annotation. Only 
+        used if `cell_annotation_method` is one of ["sargent", "cellassign"].
+    chunks_to_run (list): Specific chunks of data to run the analysis on for 
+        debugging purposes. Default is an empty list (runs all chunks).
+    configs_dict (dict): Dictionary containing ENACT configuration parameters. 
+        If provided, the values in `configs_dict` will override any 
+        corresponding parameters passed directly to the class constructor. This 
+        is useful for running ENACT with a predefined configuration for 
+        convenience and consistency. Default is an empty dictionary (i.e., 
+        using the parameters defined in the class constructor).
+"""
+  
+        # Todo: add class documentation
+        user_configs = {
+            "analysis_name": analysis_name,
+            "run_synthetic": run_synthetic,
+            "cache_dir": cache_dir,
+            "paths": {
+                "wsi_path": wsi_path,
+                "visiumhd_h5_path": visiumhd_h5_path,
+                "tissue_positions_path": tissue_positions_path,
+            },
+            "steps": {
+                "segmentation": segmentation,
+                "bin_to_geodataframes": bin_to_geodataframes,
+                "bin_to_cell_assignment": bin_to_cell_assignment,
+                "cell_type_annotation": cell_type_annotation,
+            },
+            "params": {
+                "seg_method": seg_method,
+                "patch_size": patch_size,
+                "bin_representation":bin_representation,
+                "bin_to_cell_method": bin_to_cell_method,
+                "cell_annotation_method": cell_annotation_method,
+                "cell_typist_model": cell_typist_model,
+                "use_hvg": use_hvg,
+                "n_hvg": n_hvg,
+                "n_clusters": n_clusters,
+                "chunks_to_run": chunks_to_run,
+            },
+            "cell_markers": cell_markers,
+        }
+        self.configs = user_configs
+        if configs_dict != {}:
+            # If user specifies a configs_dict -> it overwrites all other user-specified parameters
+            self.overwrite_configs(configs_dict)
+
+        if self.configs["cache_dir"] == "":
+            raise ValueError(f"Error: Please provide a value for 'cache_dir'.")
+        
+        if self.configs["params"]["cell_annotation_method"] == "celltypist":
+            if self.configs["params"]["cell_typist_model"] == "":
+                raise ValueError(
+                    f"Error: Please provide a value for 'cell_typist_model'. "
+                    "Refer to https://www.celltypist.org/models for a full list of models."
+                )
+        
+        if self.configs["params"]["cell_annotation_method"] in ["sargent", "cellassign"]:
+            if self.configs["cell_markers"] == {}:
+                raise ValueError(
+                    f"Error: Please provide a value for 'cell_markers'."
+                )
 
         # Load input files
         core_paths = ["wsi_path", "visiumhd_h5_path", "tissue_positions_path"]
         for core_path in core_paths:
-            if not self.configs.get("paths") or not self.configs["paths"].get(
-                core_path
-            ):
+            if self.configs["paths"][core_path] == "":
                 raise ValueError(
-                    f"Error: '{core_path}' is required in 'paths' configuration."
+                    f"Error: Please provide a value for '{core_path}'. "
                 )
-        self.wsi_path = self.configs["paths"]["wsi_path"]
-        self.visiumhd_h5_path = self.configs["paths"]["visiumhd_h5_path"]
-        self.tissue_positions_path = self.configs["paths"]["tissue_positions_path"]
+        self.initiate_instance_variables()
+        self.load_configs()
+    
+    def overwrite_configs(self, configs_dict):
+        """
+        Function overwrites the configurations with the content in the configs_dict
+        """
+        for key, value in configs_dict.items():
+            if key in ["cell_markers"] or not isinstance(value, dict):
+                self.configs[key] = value
+            else:
+                for sub_key, sub_value in value.items():
+                    self.configs[key][sub_key] = sub_value
 
-        # Load parameters
-        parameters = self.configs.get("params", {})
-        self.seg_method = parameters.get("seg_method", "stardist")
-        self.patch_size = parameters.get(
-            "patch_size", 4000
-        )  # Will break down the segmented cells file into chunks of this size to fit into memory
-        self.n_clusters = parameters.get("n_clusters", 4)
-        self.bin_representation = parameters.get("bin_representation", "polygon")
-        self.bin_to_cell_method = parameters.get(
-            "bin_to_cell_method", "weighted_by_cluster"
-        )
-        self.cell_annotation_method = parameters.get(
-            "cell_annotation_method", "celltypist"
-        )
-        if self.cell_annotation_method == "celltypist":
-            if not parameters.get("cell_typist_model"):
-                raise ValueError(
-                    f"Error: '{cell_typist_model}' is required in 'params' configuration."
-                )
-            self.cell_typist_model = self.configs["params"]["cell_typist_model"]
-        self.run_synthetic = self.configs.get("run_synthetic", False)
+    def initiate_instance_variables(self):
+        """
+        Creates instance variables for all the keys defined in the config file
+        """
+        run_details = "ENACT running with the following configurations: \n"
+        kwargs = {}
+        for key, value in self.configs.items():
+            if key in ["cell_markers"] or not isinstance(value, dict):
+                setattr(self, key, value)
+                run_details+= f" {key}: {value}\n"
+                kwargs[key] = value
+            else:
+                for sub_key, sub_value in value.items():
+                    setattr(self, sub_key, sub_value)
+                    run_details+= f" {sub_key}: {sub_value}\n"
+                    kwargs[sub_key] = sub_value
+        self.run_details = run_details
+        self.kwargs = kwargs
 
-        # Load steps
-        steps = self.configs.get("steps", {})
-        self.segmentation = steps.get("segmentation", True)
-        self.bin_to_geodataframes = steps.get("bin_to_geodataframes", True)
-        self.bin_to_cell_assignment = steps.get("bin_to_cell_assignment", True)
-        self.cell_type_annotation = steps.get("cell_type_annotation", True)
-
+    def load_configs(self):
+        """Loading the configuations and parameters"""
         # Generating paths
+        self.cache_dir = os.path.join(self.cache_dir, self.analysis_name)
         self.cells_df_path = os.path.join(self.cache_dir, "cells_df.csv")
         self.cells_layer_path = os.path.join(self.cache_dir, "cells_layer.png")
         self.cell_chunks_dir = os.path.join(self.cache_dir, "chunks", "cells_gdf")
@@ -118,6 +234,8 @@ class ENACT:
         )
         os.makedirs(self.cellannotation_results_dir, exist_ok=True)
         os.makedirs(self.cell_chunks_dir, exist_ok=True)
+        self.logger = get_logger("ENACT", self.cache_dir)
+        self.logger.info(f"<initiate_instance_variables> {self.run_details}")
 
     def load_image(self, file_path=None):
         """Load image from given file path
@@ -132,7 +250,7 @@ class ENACT:
         crop_bounds = self.get_image_crop_bounds()
         x_min, y_min, x_max, y_max = crop_bounds
         img_arr = img_arr[y_min:y_max, x_min:x_max, :]
-        logger.info("<load_image> Successfully loaded image!")
+        self.logger.info("<load_image> Successfully loaded image!")
         return img_arr, crop_bounds
 
     def get_image_crop_bounds(self, file_path=None):
@@ -179,7 +297,7 @@ class ENACT:
         """
         # Adjust min_percentile and max_percentile as needed
         image_norm = normalize(image, min_percentile, max_percentile)
-        logger.info("<normalize_image> Successfully normalized image!")
+        self.logger.info("<normalize_image> Successfully normalized image!")
         return image_norm
 
     def segment_cells(self, image, prob_thresh=0.005):
@@ -207,10 +325,10 @@ class ENACT:
                 normalizer=None,
                 n_tiles=(4, 4, 1),
             )
-            logger.info("<run_segmentation> Successfully segmented cells!")
+            self.logger.info("<run_segmentation> Successfully segmented cells!")
             return labels, polys
         else:
-            logger.warning("<run_segmentation> Invalid cell segmentation model!")
+            self.logger.warning("<run_segmentation> Invalid cell segmentation model!")
             return None, None
 
     def convert_stardist_output_to_gdf(self, cell_polys, save_path=None):
@@ -266,7 +384,7 @@ class ENACT:
         # Need to divide into chunks of patch_size pixels by patch_size pixels
         df[["patch_x", "patch_y"]] = (df[[x_col, y_col]] / self.patch_size).astype(int)
         df["patch_id"] = df["patch_x"].astype(str) + "_" + df["patch_y"].astype(str)
-        logger.info(
+        self.logger.info(
             f"<split_df_to_chunks> Splitting into chunks. output_dir: {output_dir}"
         )
         unique_patches = df.patch_id.unique()
@@ -343,13 +461,12 @@ class ENACT:
                 for item in sublist
             ]
             missing_markers = set(cell_markers) - set(hvg_mask.index)
-            logger.info(
+            self.logger.info(
                 f"<load_visiumhd_dataset> Missing the following markers: {missing_markers}"
             )
             available_markers = list(set(cell_markers) & set(hvg_mask.index))
             hvg_mask.loc[available_markers] = True
             adata = adata[:, hvg_mask]
-
         return adata, bin_size
 
     def generate_bin_polys(self, bins_df, x_col, y_col, bin_size):
@@ -370,7 +487,7 @@ class ENACT:
             # Geometry column is just the centre (x, y) for a VisiumHD bin
             geometry = [Point(xy) for xy in zip(bins_df[x_col], bins_df[y_col])]
         elif self.bin_representation == "polygon":
-            logger.info(
+            self.logger.info(
                 f"<generate_bin_polys> Generating bin polygons. num_bins: {len(bins_df)}"
             )
             half_bin_size = bin_size / 2
@@ -395,7 +512,7 @@ class ENACT:
                 )
             ]
         else:
-            logger.warning("<generate_bin_polys> Select a valid mode!")
+            self.logger.warning("<generate_bin_polys> Select a valid mode!")
         return geometry
 
     def convert_adata_to_cell_by_gene(self, adata):
@@ -469,12 +586,17 @@ class ENACT:
             chunk_list = self.configs["params"]["chunks_to_run"]
         else:
             chunk_list = os.listdir(self.cell_chunks_dir)
-        logger.info(
+        self.logger.info(
             f"<assign_bins_to_cells> Assigning bins to cells using {self.bin_to_cell_method} method"
         )
         for chunk in tqdm(chunk_list, total=len(chunk_list)):
             if os.path.exists(os.path.join(self.cell_ix_lookup_dir, chunk)):
                 continue
+            if chunk in [".ipynb_checkpoints"]:
+                continue
+            if not os.path.exists(os.path.join(self.bin_chunks_dir, chunk)):
+                continue
+
             # Loading the cells geodataframe
             cell_gdf_chunk_path = os.path.join(self.cell_chunks_dir, chunk)
             cell_gdf_chunk = gpd.GeoDataFrame(pd.read_csv(cell_gdf_chunk_path))
@@ -523,11 +645,13 @@ class ENACT:
             filtered_adata.obs["id"] = filtered_result_spatial_join["id"].tolist()
 
             unfilt_result_spatial_join = result_spatial_join.copy()
-            logger.info("<assign_bins_to_cells> done spatial join")
+            self.logger.info("<assign_bins_to_cells> done spatial join")
 
             if result_spatial_join.empty:
-                 logger.info("result_spatial_join is empty, skipping bin-to-cell assignment.")
-                 continue
+                self.logger.info(
+                    "result_spatial_join is empty, skipping bin-to-cell assignment."
+                )
+                continue
 
             elif self.bin_to_cell_method == "naive":
                 result_spatial_join = naive_assignment(result_spatial_join)
@@ -557,8 +681,8 @@ class ENACT:
                     n_clusters=self.configs["params"]["n_clusters"],
                 )
             else:
-                print("ERROR", self.bin_to_cell_method)
-            logger.info("<assign_bins_to_cells> convert_adata_to_cell_by_gene")
+                self.logger.info("ERROR", self.bin_to_cell_method)
+            self.logger.info("<assign_bins_to_cells> convert_adata_to_cell_by_gene")
             cell_by_gene_adata = self.convert_adata_to_cell_by_gene(expanded_adata)
             del expanded_adata
 
@@ -609,7 +733,7 @@ class ENACT:
             )
             index_lookup_df["chunk_name"] = chunk
             index_lookup_df.to_csv(os.path.join(self.cell_ix_lookup_dir, chunk))
-            print(
+            self.logger.info(
                 f"{self.bin_to_cell_method} mean count per cell: {chunk_gene_to_cell_assign_df.sum(axis=1).mean()}"
             )
 
@@ -626,7 +750,7 @@ class ENACT:
         else:
             chunk_list = os.listdir(self.cell_chunks_dir)
 
-        logger.info(
+        self.logger.info(
             f"<assign_bins_to_cells_synthetic> Assigning bins to cells using {self.bin_to_cell_method} method"
         )
         for chunk in tqdm(chunk_list, total=len(chunk_list)):
@@ -693,7 +817,7 @@ class ENACT:
                 filtered_adata.X = sparse.csr_matrix(filtered_adata.X)
             if not sparse.issparse(expanded_adata.X):
                 expanded_adata.X = sparse.csr_matrix(expanded_adata.X)
-            logger.info("<assign_bins_to_cells> done spatial join")
+            self.logger.info("<assign_bins_to_cells> done spatial join")
 
             cell_gdf_chunk.rename(columns={"cell_id": "id"}, inplace=True)
             result_spatial_join.rename(
@@ -729,7 +853,7 @@ class ENACT:
                     n_clusters=self.configs["params"]["n_clusters"],
                 )
 
-            logger.info("<assign_bins_to_cells> convert_adata_to_cell_by_gene")
+            self.logger.info("<assign_bins_to_cells> convert_adata_to_cell_by_gene")
 
             if not sparse.issparse(expanded_adata.X):
                 expanded_adata.X = sparse.csr_matrix(expanded_adata.X)
@@ -754,7 +878,7 @@ class ENACT:
                 os.path.join(self.bin_assign_dir, chunk)
             )
 
-            print(f"{chunk} finished")
+            self.logger.info(f"{chunk} finished")
 
     def merge_files(
         self, input_folder, output_file_name="merged_results.csv", save=True
@@ -791,7 +915,7 @@ class ENACT:
         if save:
             # Save the concatenated DataFrame to the output file
             concatenated_df.to_csv(output_file, index=False)
-            logger.info(
+            self.logger.info(
                 f"<merge_files> files have been merged and saved to {output_file}"
             )
         return concatenated_df
@@ -800,31 +924,30 @@ class ENACT:
         """Runs cell type annotation"""
         ann_method = self.configs["params"]["cell_annotation_method"]
         if ann_method == "sargent":
-            logger.info(
+            self.logger.info(
                 f"<run_cell_type_annotation> Will launch Sargent separately. "
                 "Please ensure Sargent is installed."
             )
         elif ann_method == "cellassign":
             from .cellassign import CellAssignPipeline
 
-            cellassign_obj = CellAssignPipeline(configs=self.configs)
+            cellassign_obj = CellAssignPipeline(**self.kwargs)
             cellassign_obj.format_markers_to_df()
             cellassign_obj.run_cell_assign()
-            logger.info(
+            self.logger.info(
                 f"<run_cell_type_annotation> Successfully ran CellAssign on Data."
             )
 
         elif ann_method == "celltypist":
             from .celltypist import CellTypistPipeline
-
-            celltypist_obj = CellTypistPipeline(configs=self.configs)
+            celltypist_obj = CellTypistPipeline(**self.kwargs)
 
             celltypist_obj.run_cell_typist()
-            logger.info(
+            self.logger.info(
                 f"<run_cell_type_annotation> Successfully ran CellTypist on Data."
             )
         else:
-            logger.info(
+            self.logger.info(
                 "<run_cell_type_annotation> Please select a valid cell annotation "
                 "method. options=['cellassign', 'sargent']"
             )
@@ -833,13 +956,13 @@ class ENACT:
         """Packages the results of the pipeline"""
         from .package_results import PackageResults
 
-        pack_obj = PackageResults(configs=self.configs)
+        pack_obj = PackageResults(**self.kwargs)
         ann_method = self.configs["params"]["cell_annotation_method"]
         if ann_method == "sargent":
             results_df, cell_by_gene_df = pack_obj.merge_sargent_output_files()
             adata = pack_obj.df_to_adata(results_df, cell_by_gene_df)
             pack_obj.save_adata(adata)
-            logger.info("<package_results> Packaged Sargent results")
+            self.logger.info("<package_results> Packaged Sargent results")
         elif ann_method == "cellassign":
             cell_by_gene_df = pack_obj.merge_cellassign_output_files()
             results_df = pd.read_csv(
@@ -847,7 +970,7 @@ class ENACT:
             )
             adata = pack_obj.df_to_adata(results_df, cell_by_gene_df)
             pack_obj.save_adata(adata)
-            logger.info("<package_results> Packaged CellAssign results")
+            self.logger.info("<package_results> Packaged CellAssign results")
         elif ann_method == "celltypist":
             cell_by_gene_df = pack_obj.merge_cellassign_output_files()
             results_df = pd.read_csv(
@@ -855,9 +978,9 @@ class ENACT:
             )
             adata = pack_obj.df_to_adata(results_df, cell_by_gene_df)
             pack_obj.save_adata(adata)
-            logger.info("<package_results> Packaged CellTypist results")
+            self.logger.info("<package_results> Packaged CellTypist results")
         else:
-            logger.info(
+            self.logger.info(
                 f"<package_results> Please select a valid cell annotation method"
             )
 
@@ -876,8 +999,6 @@ class ENACT:
                 cells_gdf = self.convert_stardist_output_to_gdf(
                     cell_polys=cell_polys, save_path=None
                 )
-                # cells_gdf = pd.read_csv("/home/oneai/oneai-dda-spatialtr-visiumhd_analysis/cache/colon-demo/enact_results/cells_df.csv")
-                # cells_gdf["geometry"] = cells_gdf["geometry"].apply(wkt.loads)
                 # Split the cells geodataframe to chunks
                 self.split_df_to_chunks(
                     df=cells_gdf,
@@ -942,5 +1063,5 @@ if __name__ == "__main__":
     print(f"<ENACT> Loading configurations from {configs_path}")
     with open(configs_path, "r") as stream:
         configs = yaml.safe_load(stream)
-    so_hd = ENACT(configs)
+    so_hd = ENACT(configs_dict=configs)
     so_hd.run_enact()

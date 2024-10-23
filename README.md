@@ -32,8 +32,8 @@ This can be achieved through the following steps:
 - [Input Files for ENACT](#input-files-for-enact)
 - [Defining ENACT Configurations](#defining-enact-configurations)
 - [Output Files for ENACT](#output-files-for-enact)
-- [Running ENACT from Terminal](#running-enact-from-terminal)
 - [Running ENACT from Notebook](#running-enact-from-notebook)
+- [Running ENACT from Terminal](#running-enact-from-terminal)
 - [Running Instructions](#running-instructions)
 - [Reproducing Paper Results](#reproducing-paper-results)
 - [Creating Synthetic VisiumHD Datasets](#creating-synthetic-visiumhd-datasets)
@@ -75,7 +75,125 @@ ENACT requires only three files, which can be obtained from SpaceRanger’s outp
 3. **filtered_feature_bc_matrix.h5**. This is the .h5 file with the *2um* Visium HD bin counts.
 
 ## Defining ENACT Configurations
-All of ENACT's configurations are specified in the `config/configs.yaml`:
+ENACT users can choose to specify the configurations via one of two ways:
+
+1. Passing them within the class constructor:
+```
+  from enact.pipeline import ENACT
+
+  so_hd = ENACT(
+      cache_dir="/home/oneai/test_cache",
+      wsi_path="Visium_HD_Human_Colon_Cancer_tissue_image.btf",
+      visiumhd_h5_path="binned_outputs/square_002um/filtered_feature_bc_matrix.h5",
+      tissue_positions_path="binned_outputs/square_002um/spatial/tissue_positions.parquet",
+      )
+```
+<details>
+  <summary><strong>Full list of ENACT parameters (click to expand)</strong></summary>
+
+  ## Parameters
+
+  - **cache_dir (str)**:  
+    Directory to cache ENACT results. This must be specified by the user.
+
+  - **wsi_path (str)**:  
+    Path to the Whole Slide Image (WSI) file. This must be provided by the user.
+
+  - **visiumhd_h5_path (str)**:  
+    Path to the Visium HD h5 file containing spatial transcriptomics data. This 
+    must be provided by the user.
+
+  - **tissue_positions_path (str)**:  
+    Path to the tissue positions file that contains spatial locations of barcodes. 
+    This must be provided by the user.
+
+  - **analysis_name (str)**:  
+    Name of the analysis, used for output directories and results.  
+    *Default*: `"enact_demo"`.
+
+  - **seg_method (str)**:  
+    Cell segmentation method.  
+    *Default*: `"stardist"`.  
+    *Options*: `["stardist"]`.
+
+  - **patch_size (int)**:  
+    Size of patches (in pixels) to process the image. Use a smaller patch size to 
+    reduce memory requirements.  
+    *Default*: `4000`.
+
+  - **use_hvg (bool)**:  
+    Whether to use highly variable genes (HVG) during the analysis.  
+    *Default*: `True`.  
+    *Options*: `[True]`.
+
+  - **n_hvg (int)**:  
+    Number of highly variable genes to use if `use_hvg` is `True`.  
+    *Default*: `1000`.
+
+  - **n_clusters (int)**:  
+    Number of clusters. Used only if `bin_to_cell_method` is `"weighted_by_cluster"`.  
+    *Default*: `4`.
+
+  - **bin_representation (str)**:  
+    Representation type for VisiumHD bins.  
+    *Default*: `"polygon"`.  
+    *Options*: `["polygon"]`.
+
+  - **bin_to_cell_method (str)**:  
+    Method to assign bins to cells.  
+    *Default*: `"weighted_by_cluster"`.  
+    *Options*: `["naive", "weighted_by_area", "weighted_by_gene", "weighted_by_cluster"]`.
+
+  - **cell_annotation_method (str)**:  
+    Method for annotating cell types.  
+    *Default*: `"celltypist"`.  
+    *Options*: `["celltypist", "sargent" (if installed), "cellassign"]`.
+
+  - **cell_typist_model (str)**:  
+    Path to the pre-trained CellTypist model for cell type annotation. Only used if 
+    `cell_annotation_method` is `"celltypist"`.  
+    Refer to [CellTypist Models](https://www.celltypist.org/models) for a list of 
+    available models.  
+    *Default*: `""` (empty string).
+
+  - **run_synthetic (bool)**:  
+    Whether to run synthetic data generation for testing purposes.  
+    *Default*: `False`.
+
+  - **segmentation (bool)**:  
+    Flag to run the image segmentation step.  
+    *Default*: `True`.
+
+  - **bin_to_geodataframes (bool)**:  
+    Flag to convert the bins to GeoDataFrames.  
+    *Default*: `True`.
+
+  - **bin_to_cell_assignment (bool)**:  
+    Flag to run bin-to-cell assignment.  
+    *Default*: `True`.
+
+  - **cell_type_annotation (bool)**:  
+    Flag to run cell type annotation.  
+    *Default*: `True`.
+
+  - **cell_markers (dict)**:  
+    A dictionary of cell markers used for annotation. Only used if `cell_annotation_method` 
+    is one of `["sargent", "cellassign"]`.
+
+  - **chunks_to_run (list)**:  
+    Specific chunks of data to run the analysis on, typically for debugging.  
+    *Default*: `[]` (runs all chunks).
+
+  - **configs_dict (dict)**:  
+    Dictionary containing ENACT configuration parameters. If provided, the values 
+    in `configs_dict` will override any corresponding parameters passed directly 
+    to the class constructor. This is useful for running ENACT with a predefined 
+    configuration for convenience and consistency.  
+    *Default*: `{}` (uses the parameters specified in the class constructor).
+
+</details>
+
+2. Specifying configurations in a `yaml` file: (sample file located under `config/configs.yaml`):
 ```yaml
     analysis_name: <analysis-name>                              <---- custom name for analysis. Will create a folder with that name to store the results
     run_synthetic: False                                        <---- True if you want to run bin to cell assignment on synthetic dataset, False otherwise
@@ -126,12 +244,15 @@ ENACT outputs all its results under the `cache` directory which gets automatical
         └── cells_df.csv
 ```
 ENACT breaks down the whole resolution image into "chunks" (or patches) of size `patch_size`. Results are provided per-chunk under the `chunks` directory.
-* bins_gdf: Folder containing GeoPandas dataframes representing the 2um Visium HD bins within a given patch
-* cells_gdf: Folder containing GeoPandas dataframes representing cells segmented in the tissue
-* <bin_to_cell_method>/bin_to_cell_assign: Folder contains dataframes with the transcripts assigned to each cells
-* <bin_to_cell_method>/cell_ix_lookup: Folder contains dataframes defining the indices and coordinates of the cells
-* <bin_to_cell_method>/<cell_annotation_method>_results/cells_adata.csv: Anndata object containing the results from ENACT (cell coordinates, cell types, transcript counts)
-* <bin_to_cell_method>/<cell_annotation_method>_results/merged_results.csv: Dataframe (.csv) containing the results from ENACT (cell coordinates, cell types)
+* `bins_gdf`:Folder containing GeoPandas dataframes representing the 2um Visium HD bins within a given patch
+* `cells_gdf`: Folder containing GeoPandas dataframes representing cells segmented in the tissue
+* `<bin_to_cell_method>/bin_to_cell_assign`: Folder contains dataframes with the transcripts assigned to each cells
+* `<bin_to_cell_method>/cell_ix_lookup`: Folder contains dataframes defining the indices and coordinates of the cells
+* `<bin_to_cell_method>/<cell_annotation_method>_results/cells_adata.csv`: Anndata object containing the results from ENACT (cell coordinates, cell types, transcript counts)
+* <`bin_to_cell_method>/<cell_annotation_method>_results/merged_results.csv`: Dataframe (.csv) containing the results from ENACT (cell coordinates, cell types)
+
+## Running ENACT from Notebook
+The [demo notebook](ENACT_demo.ipynb) provides a step-by-step guide on how to install and run ENACT on VisiumHD public data using notebook.
 
 ## Running ENACT from Terminal
 This section provides a guide for running ENACT on the [Human Colorectal Cancer sample](https://www.10xgenomics.com/datasets/visium-hd-cytassist-gene-expression-libraries-of-human-crc) provided on 10X Genomics' website.
@@ -206,10 +327,6 @@ cell_markers:
 
 ```
 
-## Running ENACT from Notebook
-The [demo notebook](ENACT_demo.ipynb) provides a step-by-step guide on how to install and run ENACT on VisiumHD public data using notebook.
-
-
 ## Running Instructions
 This section provides a guide on running ENACT on your own data
 ### Step 1: Install ENACT from Source 
@@ -256,6 +373,13 @@ Define the cell gene markers in `config/configs.yaml` file. Those can be expert 
 ```
 make run_enact
 ```
+
+### * Step 6 (optional): Run Sargent
+If Sargent is chosen as the cell type assignment method. After getting access to Sargent, run:
+```
+make run_sargent
+```
+after the first three steps are run.
 
 ## Reproducing Paper Results
 This section provides a guide on how to reproduce the ENACT paper results on the [10X Genomics Human Colorectal Cancer VisumHD sample](https://www.10xgenomics.com/datasets/visium-hd-cytassist-gene-expression-libraries-of-human-crc). 

@@ -2,7 +2,9 @@
 """
 
 import os
-
+import yaml
+import json
+import shutil
 import anndata
 import pandas as pd
 
@@ -111,6 +113,52 @@ class PackageResults(ENACT):
         adata.obs["cell_type"] = results_df[["cell_type"]].astype("category")
         adata.obs["patch_id"] = results_df[["chunk_name"]]
         return adata
+
+    def create_tmap_file(self):
+        # The following three files need to be in the same directory:
+        # cells_adata.h5, wsi file, experiment_tmap.tmap
+        tmap_template_path = "./templates/tmap_template.tmap"
+        with open(tmap_template_path, "r") as stream:
+            tmap_template = yaml.safe_load(stream)
+            tmap_template["exp_path"] = self.configs["analysis_name"]
+            tmap_template["filename"] = self.configs["analysis_name"]
+            tmap_template["markerFiles"][0]["path"] = "cells_adata.h5"
+            bin_to_cell_method = self.configs["params"]["bin_to_cell_method"]
+            cell_annotation_method = self.configs["params"]["cell_annotation_method"]
+            button_txt = f"ENACT Results: {bin_to_cell_method} | {cell_annotation_method}"
+            tmap_template["markerFiles"][0]["title"] = button_txt
+            tmap_template["markerFiles"][0]["expectedHeader"].update(
+                {
+                    "X": "/obsm/spatial/cell_x",
+                    "Y": "/obsm/spatial/cell_y",
+                    "gb_col": "/obs/cell_type/",
+                }
+            )
+            wsi_fname = "wsi.tif"
+            if ".btf" in self.configs["paths"]["wsi_path"]:
+                tmap_template["layers"][0].update(
+                    {"name": "wsi.btf", "tileSource": "wsi.btf.dzi"}
+                )
+                wsi_fname = "wsi.btf"
+
+            # save tmap file
+            tmap_output_dir = os.path.join(self.cellannotation_results_dir, "tmap")
+            os.makedirs(tmap_output_dir, exist_ok=True)
+            tmap_file_path = os.path.join(tmap_output_dir, "experiment_tmap.tmap")
+            with open(tmap_file_path, "w") as outfile:
+                outfile.write(json.dumps(tmap_template, indent=4))
+
+            # Copy the anndata file
+            adata_src_path = os.path.join(
+                self.cellannotation_results_dir, "cells_adata.h5"
+            )
+            adata_dst_path = os.path.join(tmap_output_dir, "cells_adata.h5")
+            shutil.copy(adata_src_path, adata_dst_path)
+
+            # Copy the image file
+            wsi_src_path = self.configs["paths"]["wsi_path"]
+            wsi_dst_path = os.path.join(tmap_output_dir, wsi_fname)
+            shutil.copy(wsi_src_path, wsi_dst_path)
 
     # def run_neighborhood_enrichment(self, adata):
     #     """Sample function to run Squidpy operations on AnnData object

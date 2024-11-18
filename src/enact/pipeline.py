@@ -955,13 +955,13 @@ Args:
     def package_results(self):
         """Packages the results of the pipeline"""
         from .package_results import PackageResults
-
         pack_obj = PackageResults(**self.kwargs)
         ann_method = self.configs["params"]["cell_annotation_method"]
         if ann_method == "sargent":
             results_df, cell_by_gene_df = pack_obj.merge_sargent_output_files()
             adata = pack_obj.df_to_adata(results_df, cell_by_gene_df)
             pack_obj.save_adata(adata)
+            pack_obj.create_tmap_file()
             self.logger.info("<package_results> Packaged Sargent results")
         elif ann_method == "cellassign":
             cell_by_gene_df = pack_obj.merge_cellassign_output_files()
@@ -970,6 +970,7 @@ Args:
             )
             adata = pack_obj.df_to_adata(results_df, cell_by_gene_df)
             pack_obj.save_adata(adata)
+            pack_obj.create_tmap_file()
             self.logger.info("<package_results> Packaged CellAssign results")
         elif ann_method == "celltypist":
             cell_by_gene_df = pack_obj.merge_cellassign_output_files()
@@ -978,6 +979,7 @@ Args:
             )
             adata = pack_obj.df_to_adata(results_df, cell_by_gene_df)
             pack_obj.save_adata(adata)
+            pack_obj.create_tmap_file()
             self.logger.info("<package_results> Packaged CellTypist results")
         else:
             self.logger.info(

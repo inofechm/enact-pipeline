@@ -574,7 +574,7 @@ Args:
         bins_gdf = gpd.GeoDataFrame(bin_coords_df, geometry=geometry)
         return bins_gdf
 
-    def assign_bins_to_cells(self, adata):
+    def assign_bins_to_cells(self, adata, crop_bounds):
         """Assigns bins to cells based on method requested by the user
 
         Args:
@@ -720,6 +720,15 @@ Args:
             cell_gdf_chunk[["num_shared_bins", "num_unique_bins"]] = cell_gdf_chunk[
                 ["num_shared_bins", "num_unique_bins"]
             ].fillna(0)
+
+            # Adjusting cell location based on crop boundaries
+            if crop_bounds is not None:
+                x1, y1, _, _ = crop_bounds
+            else:
+                x1, y1 = (0, 0)
+            cell_gdf_chunk["cell_x"] = cell_gdf_chunk["cell_x"] + x1
+            cell_gdf_chunk["cell_y"] = cell_gdf_chunk["cell_y"] + y1
+
             # Save index lookup to store x and y values and cell index
             index_lookup_df = cell_by_gene_adata.obs.merge(
                 cell_gdf_chunk, how="left", left_index=True, right_on="id"
@@ -1031,7 +1040,7 @@ Args:
             # Run bin-to-cell assignment
             if self.bin_to_cell_assignment:
                 bins_adata, bin_size = self.load_visiumhd_dataset(crop_bounds)
-                self.assign_bins_to_cells(bins_adata)
+                self.assign_bins_to_cells(bins_adata,crop_bounds)
 
             # Run cell type annotation
             if self.cell_type_annotation:

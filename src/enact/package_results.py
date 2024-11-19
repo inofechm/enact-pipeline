@@ -7,6 +7,7 @@ import json
 import shutil
 import anndata
 import pandas as pd
+from PIL import Image
 
 # import squidpy as sq
 
@@ -126,7 +127,7 @@ class PackageResults(ENACT):
             bin_to_cell_method = self.configs["params"]["bin_to_cell_method"]
             cell_annotation_method = self.configs["params"]["cell_annotation_method"]
             wsi_src_path = self.configs["paths"]["wsi_path"]
-            wsi_fname = wsi_src_path.split("/")[-1]
+            wsi_fname = "wsi.tif"
             run_name = f"{bin_to_cell_method}|{cell_annotation_method}"
             tmap_template["markerFiles"][0]["title"] = f"ENACT Results: {run_name.replace('|', ' | ')}"
             tmap_template["markerFiles"][0]["expectedHeader"].update(
@@ -155,10 +156,12 @@ class PackageResults(ENACT):
             adata_dst_path = os.path.join(tmap_output_dir, f"{run_name}_cells_adata.h5")
             shutil.copy(adata_src_path, adata_dst_path)
 
-            # Copy the image file to the "tmap" directory
+            # Saving a cropped version (lite version) of the image file to the "tmap" directory
             wsi_dst_path = os.path.join(tmap_output_dir, wsi_fname)
-            if not os.path.exists(wsi_dst_path):
-                shutil.copy(wsi_src_path, wsi_dst_path)
+            cropped_image, _ = self.load_image()
+            cropped_image = Image.fromarray(cropped_image)
+            cropped_image.save(wsi_dst_path)
+
             message = f"""
             Sample ready to visualize on TissUUmaps. To install TissUUmaps, follow the instructions at:\n
             https://tissuumaps.github.io/TissUUmaps-docs/docs/intro/installation.html#. 

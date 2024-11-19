@@ -6,9 +6,9 @@ paths:
   visiumhd_h5_path: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/filtered_feature_bc_matrix.h5"
   tissue_positions_path: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/tissue_positions.parquet"
 steps:
-  segmentation: False # True if you want to run segmentation
-  bin_to_geodataframes: False # True to convert bin to geodataframes
-  bin_to_cell_assignment: False # True to assign cells to bins
+  segmentation: True # True if you want to run segmentation
+  bin_to_geodataframes: True # True to convert bin to geodataframes
+  bin_to_cell_assignment: True # True to assign cells to bins
   cell_type_annotation: True # True to run cell type annotation
 params:
   seg_method: "stardist" # Stardist is the only option for now

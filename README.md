@@ -249,7 +249,7 @@ ENACT outputs all its results under the `cache` directory which gets automatical
         ├── tmap/					# Directory storing files to visualize results on TissUUmaps
         │   ├── <run_name>_adata.h5
         │   ├── <run_name>_tmap.tmap
-        │   └── <whole_slide_image>
+        │   └── wsi.tif
         └── cells_df.csv				# cells dataframe, each row is a cell with its coordinates
 ```
 ENACT breaks down the whole resolution image into "chunks" (or patches) of size `patch_size`. Results are provided per-chunk under the `chunks` directory.

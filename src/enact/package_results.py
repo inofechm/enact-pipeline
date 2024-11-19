@@ -161,10 +161,13 @@ class PackageResults(ENACT):
                 shutil.copy(wsi_src_path, wsi_dst_path)
             message = f"""
             Sample ready to visualize on TissUUmaps. To install TissUUmaps, follow the instructions at:\n
-            https://tissuumaps.github.io/TissUUmaps-docs/docs/intro/installation.html#pip-installation. 
-            Once installed, view the sample by running the following line:\n
-
-            tissuumaps_server {tmap_output_dir}
+            https://tissuumaps.github.io/TissUUmaps-docs/docs/intro/installation.html#. 
+            
+            To view the the sample, follow the instructions at:\n
+            https://tissuumaps.github.io/TissUUmaps-docs/docs/starting/projects.html#loading-projects
+            
+            TissUUmaps project file is located here:\n
+            {tmap_file_path}
             """
             print (message)
 

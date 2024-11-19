@@ -1,10 +1,14 @@
 analysis_name: "colon-demo"
 run_synthetic: False # True if you want to run bin to cell assignment on synthetic dataset, False otherwise.
-cache_dir: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/output_files"
+# cache_dir: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/output_files"
+cache_dir: "/home/oneai/enact-pipeline/ENACT_supporting_files/output_files"
 paths:
-  wsi_path: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/Visium_HD_Human_Colon_Cancer_tissue_image.btf"
-  visiumhd_h5_path: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/filtered_feature_bc_matrix.h5"
-  tissue_positions_path: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/tissue_positions.parquet"
+  # wsi_path: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/Visium_HD_Human_Colon_Cancer_tissue_image.btf"
+  # visiumhd_h5_path: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/filtered_feature_bc_matrix.h5"
+  # tissue_positions_path: "/<path-to-repo>/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/tissue_positions.parquet"
+  wsi_path: "/home/oneai/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/Visium_HD_Human_Colon_Cancer_tissue_image.btf"
+  visiumhd_h5_path: "/home/oneai/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/filtered_feature_bc_matrix.h5"
+  tissue_positions_path: "/home/oneai/enact-pipeline/ENACT_supporting_files/public_data/human_colorectal/input_files/tissue_positions.parquet"
 steps:
   segmentation: False # True if you want to run segmentation
   bin_to_geodataframes: False # True to convert bin to geodataframes

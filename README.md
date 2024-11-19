@@ -38,6 +38,7 @@ This can be achieved through the following steps:
 - [Running ENACT from Notebook](#running-enact-from-notebook)
 - [Running ENACT from Terminal](#running-enact-from-terminal)
 - [Running Instructions](#running-instructions)
+- [Visualizing Results on TissUUmaps](#visualizing-results-on-tissuumaps)
 - [Reproducing Paper Results](#reproducing-paper-results)
 - [Creating Synthetic VisiumHD Datasets](#creating-synthetic-visiumhd-datasets)
 - [Citing ENACT](#citing-enact)
@@ -232,7 +233,7 @@ ENACT outputs all its results under the `cache` directory which gets automatical
 .
 └── cache/
     └── <anaylsis_name> /
-        ├── chunks/
+        ├── chunks/					# ENACT results at a chunck level
         │   ├── bins_gdf/
         │   │   └── patch_<patch_id>.csv
         │   ├── cells_gdf/
@@ -245,7 +246,11 @@ ENACT outputs all its results under the `cache` directory which gets automatical
         │       └── <cell_annotation_method>_results/
         │           ├── cells_adata.csv
         │           └── merged_results.csv
-        └── cells_df.csv
+        ├── tmap/					# Directory storing files to visualize results on TissUUmaps
+        │   ├── <run_name>_adata.h5
+        │   ├── <run_name>_tmap.tmap
+        │   └── <whole_slide_image>
+        └── cells_df.csv				# cells dataframe, each row is a cell with its coordinates
 ```
 ENACT breaks down the whole resolution image into "chunks" (or patches) of size `patch_size`. Results are provided per-chunk under the `chunks` directory.
 * `bins_gdf`:Folder containing GeoPandas dataframes representing the 2um Visium HD bins within a given patch
@@ -377,6 +382,20 @@ Define the cell gene markers in `config/configs.yaml` file. Those can be expert 
 ```
 make run_enact
 ```
+
+## Visualizing Results on TissUUmaps
+To view results on [TissUUmaps](https://tissuumaps.github.io), begin by installing TissUUmaps by following the instructions at:
+https://tissuumaps.github.io/TissUUmaps-docs/docs/intro/installation.html#. 
+            
+Once installed, follow the instructions at: https://tissuumaps.github.io/TissUUmaps-docs/docs/starting/projects.html#loading-projects
+            
+For convenience, ENACT creates a TissUUmaps project file (.tmap extension) located at under the `<cache_dir>/tmap/` folder.
+<!-- 
+<div style="text-align: center;">
+  <img src="figs/tissuumaps.png" alt="tissuumaps"/>
+</div> -->
+![plot](figs/tissuumaps.png)
+
 
 ## Reproducing Paper Results
 This section provides a guide on how to reproduce the ENACT paper results on the [10X Genomics Human Colorectal Cancer VisumHD sample](https://www.10xgenomics.com/datasets/visium-hd-cytassist-gene-expression-libraries-of-human-crc). 

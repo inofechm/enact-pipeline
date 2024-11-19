@@ -1,0 +1,103 @@
+{
+    "compositeMode": "source-over",
+    "filename": "<sample_name>",
+    "filters": [
+        "Saturation",
+        "Brightness",
+        "Contrast"
+    ],
+    "layerFilters": {
+        "0": [
+            {
+                "name": "Saturation",
+                "value": "0"
+            },
+            {
+                "name": "Brightness",
+                "value": "0"
+            },
+            {
+                "name": "Contrast",
+                "value": "1"
+            }
+        ]
+    },
+    "layerOpacities": {
+        "0": "1"
+    },
+    "layerVisibilities": {
+        "0": true
+    },
+    "layers": [
+        {
+            "name": "../wsi.tif",
+            "tileSource": "../wsi.tif.dzi"
+        }
+    ],
+    "markerFiles": [
+        {
+            "autoLoad": false,
+            "comment": "Displays the cell centroids color-coded by their cell type as predicted by Sargent.",
+            "expectedHeader": {
+                "X": "cell_x",
+                "Y": "cell_y",
+                "cb_cmap": "",
+                "cb_col": "",
+                "cb_gr_dict": "",
+                "collectionItem_col": "",
+                "collectionItem_fixed": "0",
+                "coord_factor": "1",
+                "gb_col": "cell_type",
+                "gb_name": "",
+                "opacity": "0.7",
+                "opacity_col": "",
+                "pie_col": "",
+                "pie_dict": "",
+                "scale_col": "",
+                "scale_factor": "0.2",
+                "shape_col": "",
+                "shape_fixed": "disc",
+                "shape_gr_dict": "",
+                "tooltip_fmt": ""
+            },
+            "expectedRadios": {
+                "_no_outline": true,
+                "cb_col": false,
+                "cb_gr": true,
+                "cb_gr_dict": false,
+                "cb_gr_key": false,
+                "cb_gr_rand": true,
+                "collectionItem_col": false,
+                "collectionItem_fixed": false,
+                "opacity_check": false,
+                "pie_check": false,
+                "scale_check": false,
+                "shape_col": false,
+                "shape_fixed": true,
+                "shape_gr": false,
+                "shape_gr_dict": false,
+                "shape_gr_rand": true
+            },
+            "fromButton": 0,
+            "hideSettings": true,
+            "name": "Cell centroids",
+            "path": "<cell_assignment_fname>",
+            "title": "Sargent results",
+            "uid": "U48505"
+        }
+    ],
+    "plugins": [
+        "Experiment_Data_Export",
+        "Feature_Space",
+        "Plot_Histogram",
+        "Live_Region_Analysis"
+    ],
+    "regionFiles": [
+        {
+            "path": "<geojson_fname>",
+            "title": "Load Pathologist Annotation"
+        }
+    ],
+    "regions": {},
+    "schemaVersion": "1.3"
+}

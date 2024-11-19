@@ -115,18 +115,20 @@ class PackageResults(ENACT):
         return adata
 
     def create_tmap_file(self):
+        """Creates a tmap file for the sample being run on ENACT
+        """
         # The following three files need to be in the same directory:
         # cells_adata.h5, wsi file, experiment_tmap.tmap
         tmap_template_path = "./templates/tmap_template.tmap"
         with open(tmap_template_path, "r") as stream:
             tmap_template = yaml.safe_load(stream)
-            tmap_template["exp_path"] = self.configs["analysis_name"]
             tmap_template["filename"] = self.configs["analysis_name"]
-            tmap_template["markerFiles"][0]["path"] = "cells_adata.h5"
             bin_to_cell_method = self.configs["params"]["bin_to_cell_method"]
             cell_annotation_method = self.configs["params"]["cell_annotation_method"]
-            button_txt = f"ENACT Results: {bin_to_cell_method} | {cell_annotation_method}"
-            tmap_template["markerFiles"][0]["title"] = button_txt
+            wsi_src_path = self.configs["paths"]["wsi_path"]
+            wsi_fname = wsi_src_path.split("/")[-1]
+            run_name = f"{bin_to_cell_method}|{cell_annotation_method}"
+            tmap_template["markerFiles"][0]["title"] = f"ENACT Results: {run_name.replace('|', ' | ')}"
             tmap_template["markerFiles"][0]["expectedHeader"].update(
                 {
                     "X": "/obsm/spatial/cell_x",
@@ -134,31 +136,37 @@ class PackageResults(ENACT):
                     "gb_col": "/obs/cell_type/",
                 }
             )
-            wsi_fname = "wsi.tif"
-            if ".btf" in self.configs["paths"]["wsi_path"]:
-                tmap_template["layers"][0].update(
-                    {"name": "wsi.btf", "tileSource": "wsi.btf.dzi"}
+            tmap_template["layers"][0].update(
+                    {"name": wsi_fname, "tileSource": f"{wsi_fname}.dzi"}
                 )
-                wsi_fname = "wsi.btf"
+            tmap_template["markerFiles"][0]["path"] = f"{run_name}_cells_adata.h5"
 
-            # save tmap file
-            tmap_output_dir = os.path.join(self.cellannotation_results_dir, "tmap")
+            # save tmap file at a separate directory "tmap"
+            tmap_output_dir = os.path.join(self.cache_dir, "tmap")
             os.makedirs(tmap_output_dir, exist_ok=True)
-            tmap_file_path = os.path.join(tmap_output_dir, "experiment_tmap.tmap")
+            tmap_file_path = os.path.join(tmap_output_dir, f"{run_name}_tmap.tmap")
             with open(tmap_file_path, "w") as outfile:
                 outfile.write(json.dumps(tmap_template, indent=4))
 
-            # Copy the anndata file
+            # Copy the anndata file to the "tmap" directory
             adata_src_path = os.path.join(
                 self.cellannotation_results_dir, "cells_adata.h5"
             )
-            adata_dst_path = os.path.join(tmap_output_dir, "cells_adata.h5")
+            adata_dst_path = os.path.join(tmap_output_dir, f"{run_name}_cells_adata.h5")
             shutil.copy(adata_src_path, adata_dst_path)
 
-            # Copy the image file
-            wsi_src_path = self.configs["paths"]["wsi_path"]
+            # Copy the image file to the "tmap" directory
             wsi_dst_path = os.path.join(tmap_output_dir, wsi_fname)
-            shutil.copy(wsi_src_path, wsi_dst_path)
+            if not os.path.exists(wsi_dst_path):
+                shutil.copy(wsi_src_path, wsi_dst_path)
+            message = f"""
+            Sample ready to visualize on TissUUmaps. To install TissUUmaps, follow the instructions at:\n
+            https://tissuumaps.github.io/TissUUmaps-docs/docs/intro/installation.html#pip-installation. 
+            Once installed, view the sample by running the following line:\n
+
+            tissuumaps_server {tmap_output_dir}
+            """
+            print (message)
 
     # def run_neighborhood_enrichment(self, adata):
     #     """Sample function to run Squidpy operations on AnnData object

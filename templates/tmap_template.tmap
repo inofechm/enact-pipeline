@@ -1,6 +1,5 @@
 {
     "compositeMode": "source-over",
-    "exp_path": "<sample_name>|<run_id>",
     "filename": "<sample_name>",
     "filters": [
         "Saturation",

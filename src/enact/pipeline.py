@@ -316,7 +316,7 @@ Args:
         if self.seg_method == "stardist":
             # Adjust nms_thresh and prob_thresh as needed
             # ssl._create_default_https_context = ssl._create_unverified_context
-            self.stardist_model = StarDist2D.from_pretrained(custom_seg_model)
+            self.stardist_model = StarDist2D.from_pretrained(self.self.configs["params"]["custom_seg_model"])
             labels, polys = self.stardist_model.predict_instances_big(
                 image,
                 axes="YXC",

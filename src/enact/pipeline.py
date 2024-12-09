@@ -470,6 +470,8 @@ Args:
             available_markers = list(set(cell_markers) & set(hvg_mask.index))
             hvg_mask.loc[available_markers] = True
             adata = adata[:, hvg_mask]
+	adata.obs_names_make_unique()
+	adata.var_names_make_unique()
         return adata, bin_size
 
     def generate_bin_polys(self, bins_df, x_col, y_col, bin_size):

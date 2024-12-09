@@ -54,6 +54,7 @@ class ENACT:
         cell_typist_model="",
         run_synthetic=False,
         segmentation=True,
+	custom_seg_model="2D_versatile_he",
         bin_to_geodataframes=True,
         bin_to_cell_assignment=True,
         cell_type_annotation=True,
@@ -102,6 +103,7 @@ Args:
         purposes. Default is False.
     segmentation (bool): Flag to run the image segmentation step. Default is 
         True.
+    custom_seg_model (str): Custom segmentation model from stardist. Default is HE.
     bin_to_geodataframes (bool): Flag to convert the bins to GeoDataFrames. 
         Default is True.
     bin_to_cell_assignment (bool): Flag to run bin-to-cell assignment. Default 
@@ -139,6 +141,7 @@ Args:
             "params": {
                 "seg_method": seg_method,
                 "patch_size": patch_size,
+		"custom_seg_model": custom_seg_model,
                 "bin_representation":bin_representation,
                 "bin_to_cell_method": bin_to_cell_method,
                 "cell_annotation_method": cell_annotation_method,
@@ -313,7 +316,7 @@ Args:
         if self.seg_method == "stardist":
             # Adjust nms_thresh and prob_thresh as needed
             # ssl._create_default_https_context = ssl._create_unverified_context
-            self.stardist_model = StarDist2D.from_pretrained("2D_versatile_he")
+            self.stardist_model = StarDist2D.from_pretrained(custom_seg_model)
             labels, polys = self.stardist_model.predict_instances_big(
                 image,
                 axes="YXC",
